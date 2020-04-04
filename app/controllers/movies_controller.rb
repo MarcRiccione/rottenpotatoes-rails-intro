@@ -11,7 +11,7 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @all_ratings = ['G', 'PG', 'PG-13', 'R']
+    @all_ratings = Movie.ratings
     if params[:sort] == "title"
       @movies = Movie.order(title: :asc)
       @title_header = "hilite"
@@ -19,7 +19,10 @@ class MoviesController < ApplicationController
       @movies = Movie.order(release_date: :asc)
       @release_date_header = "hilite"
     else
-      @movies = Movie.all
+      if params[:ratings] == nil
+        params[:ratings] = {"G"=>"1", "PG"=>"1", "PG-13"=>1, "R"=>"1"}
+      end
+      @movies = Movie.with_ratings(params[:ratings].keys)
     end
   end
 
