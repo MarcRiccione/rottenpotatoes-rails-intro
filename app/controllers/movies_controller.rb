@@ -12,17 +12,26 @@ class MoviesController < ApplicationController
 
   def index
     @all_ratings = Movie.ratings
-    if params[:sort] == "title"
-      @movies = Movie.order(title: :asc)
-      @title_header = "hilite"
-    elsif params[:sort] == "date"
-      @movies = Movie.order(release_date: :asc)
-      @release_date_header = "hilite"
+    session[:ratings] = params[:ratings] unless params[:ratings].nil?
+    session[:sort] = params[:sort] unless params[:sort].nil?
+    if params[:sort] == nil && params[:ratings] == nil
+        redirect_to movies_path("ratings" => session[:ratings], "sort" => session[:sort])
     else
-      if params[:ratings] == nil
-        params[:ratings] = {"G"=>"1", "PG"=>"1", "PG-13"=>1, "R"=>"1"}
-      end
-      @movies = Movie.with_ratings(params[:ratings].keys)
+      if params[:sort] == "title"
+        @movies = Movie.order(title: :asc)
+        @title_header = "hilite"
+      elsif params[:sort] == "date"
+        @movies = Movie.order(release_date: :asc)
+        @release_date_header = "hilite"
+      else
+        if params[:ratings] == nil
+          redirect_to movies_path("ratings" => session[:ratings])
+        end
+        if params[:ratings] == nil
+          params[:ratings] = {"G"=>"1", "PG"=>"1", "PG-13"=> "1", "R"=>"1"}
+        end
+        @movies = Movie.with_ratings(params[:ratings].keys)
+    end
     end
   end
 
