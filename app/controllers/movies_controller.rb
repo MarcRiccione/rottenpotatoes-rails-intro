@@ -15,7 +15,11 @@ class MoviesController < ApplicationController
     session[:ratings] = params[:ratings] unless params[:ratings].nil?
     session[:sort] = params[:sort] unless params[:sort].nil?
     if params[:sort] == nil && params[:ratings] == nil
-        redirect_to movies_path("ratings" => session[:ratings], "sort" => session[:sort])
+        if session[:sort] == nil && session[:ratings] == nil
+          @movies = Movie.all 
+        else
+          redirect_to movies_path("ratings" => session[:ratings], "sort" => session[:sort])
+        end
     else
       if params[:ratings] == nil
         if session[:ratings] == nil
