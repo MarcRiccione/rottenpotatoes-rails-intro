@@ -11,39 +11,26 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @all_ratings = Movie.ratings
-    session[:ratings] = params[:ratings] unless params[:ratings].nil?
-    if session[:ratings] == nil
-          params[:ratings] = {"G"=>"1", "PG"=>"1", "PG-13"=> "1", "R"=>"1"}
+    sort = params[:sort] || session[:sort]
+    case sort
+    when 'title'
+      ordering,@title_header = {:title => :asc}, "hilite"
+    when 'release_date'
+      ordering,@date_header = {:release_date => :asc}, "hilite"
     end
-    session[:sort] = params[:sort] unless params[:sort].nil?
-    if params[:sort] == nil && params[:ratings] == nil
-        if session[:sort] == nil && session[:ratings] == nil
-          @movies = Movie.all 
-        else
-          redirect_to movies_path("ratings" => session[:ratings], "sort" => session[:sort])
-        end
-    else
-      if params[:ratings] == nil
-        params[:ratings] = session[:ratings]
-      end
-      @movies = Movie.with_ratings(params[:ratings].keys)
-      if params[:sort] == "title"
-        @movies = @movies.order(title: :asc)
-        @title_header = "hilite"
-      elsif params[:sort] == "date"
-        @movies = @movies.order(release_date: :asc)
-        @release_date_header = "hilite"
-      else
-        if session[:sort] == "title"
-          @movies = @movies.order(title: :asc)
-          @title_header = "hilite"
-        elsif session[:sort] == "date"
-          @movies = @movies.order(release_date: :asc)
-          @release_date_header = "hilite"
-        end
-      end
+    @all_ratings = Movie.all_ratings
+    @selected_ratings = params[:ratings] || session[:ratings] || {}
+
+    if @selected_ratings == {}
+      @selected_ratings = Hash[@all_ratings.map {|rating| [rating, rating]}]
     end
+
+    if params[:sort] != session[:sort] or params[:ratings] != session[:ratings]
+      session[:sort] = sort
+      session[:ratings] = @selected_ratings
+      redirect_to :sort => sort, :ratings => @selected_ratings and return
+    end
+    @movies = Movie.where(rating: @selected_ratings.keys).order(ordering)
   end
 
   def new
